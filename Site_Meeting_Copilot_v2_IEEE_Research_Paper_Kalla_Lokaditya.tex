@@ -1,0 +1,136 @@
+\documentclass[conference]{IEEEtran}
+
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{url}
+
+\begin{document}
+
+\title{Site Meeting Copilot v2 A Local AI Based System for Construction Site Meeting Intelligence}
+
+\author{
+\IEEEauthorblockN{Kalla Lokaditya}
+\IEEEauthorblockA{
+Department of Computer Science and Engineering\\
+Dayananda Sagar University\\
+Bengaluru, India\\
+USN: ENG23CS0570}
+}
+
+\maketitle
+
+\begin{abstract}
+Construction site meetings contain decisions, blockers, responsibilities, due dates, and schedule changes that are often recorded in unstructured audio, informal notes, and spreadsheets. This paper presents Site Meeting Copilot v2, a local AI based web application that converts construction meeting evidence into structured project governance outputs. The system accepts meeting audio or a pasted transcript, agenda text, and a project schedule CSV. Audio is transcribed through a local Flask Whisper server using faster-whisper, while meeting analysis is performed locally through Ollama with phi3:mini. The application extracts summaries, decisions, blockers, action items, agenda coverage, and schedule impact flags, then exports meeting minutes, an action tracker, and a schedule impact report. Functional evaluation using demo transcripts, schedule files, malformed CSV cases, and Whisper route checks shows that the Version 1 implementation satisfies the core requirements of a construction meeting intelligence MVP.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Construction management, meeting minutes, automatic speech recognition, local language model, action tracker, schedule impact analysis, project governance.
+\end{IEEEkeywords}
+
+\section{Introduction}
+Construction projects depend on regular coordination between owners, project managers, site engineers, consultants, contractors, suppliers, and safety teams. Site meetings are used to review work progress, identify blockers, approve decisions, and assign follow up responsibilities. The difficulty is that meeting information is usually produced as unstructured audio, handwritten notes, messaging app updates, or spreadsheets. Important decisions can therefore remain hidden until someone manually prepares minutes and action trackers.
+
+Manual preparation also creates delay. If an owner, due date, procurement issue, safety concern, or schedule dependency is missed, the project team may lose visibility into project risk. Automatic speech recognition and compact local language models make it possible to assist this workflow while keeping project data on the user's computer \cite{radford2023whisper,abdin2024phi3}.
+
+This paper presents Site Meeting Copilot v2, a Version 1 prototype that converts construction meeting evidence into structured outputs. The system accepts audio or transcript input, checks agenda coverage, uses a project schedule CSV for context, and exports meeting minutes, an action tracker, and a schedule impact report.
+
+\section{Problem Statement and Objectives}
+The problem addressed in this work is the absence of a lightweight local tool for converting construction site meeting recordings into structured project governance records. A useful Version 1 solution should identify meeting decisions, blockers, owners, due dates, missed agenda items, and schedule tasks affected by meeting outcomes.
+
+The objectives are:
+\begin{itemize}
+    \item Develop a local first construction meeting assistant using a browser interface, local transcription, and local language model inference.
+    \item Support audio upload and editable transcript input.
+    \item Extract summaries, decisions, blockers, action items, agenda coverage, and schedule impacts.
+    \item Validate schedule CSV files and use project schedule rows during analysis.
+    \item Export meeting minutes, an action tracker, and a schedule impact report for project review.
+\end{itemize}
+
+\section{Related Work}
+Whisper demonstrated that speech recognition models trained with large scale weak supervision can generalize across diverse audio conditions \cite{radford2023whisper}. The implementation in this project uses faster-whisper, a CTranslate2 based reimplementation of Whisper that supports efficient local inference and quantization \cite{fasterwhisper}.
+
+For language understanding, the project uses phi3:mini through Ollama. The Phi-3 technical report presents phi3-mini as a compact language model suitable for local and resource constrained deployment \cite{abdin2024phi3}. Ollama provides a local API for generating model responses from prompts, which makes it practical to connect a browser based prototype to a local model runtime \cite{ollamaapi}.
+
+Construction management studies identify project meetings as important coordination events. Ludwig's construction meeting case study discusses the importance of meeting quality and meeting discipline for construction project success \cite{ludwig2018meetings}. Site Meeting Copilot v2 builds on this need by automating the extraction of meeting records that a site engineer can review.
+
+\section{Proposed System Architecture}
+The system has four layers. The frontend collects project details, audio, transcript, agenda, and schedule files. The speech layer exposes a Flask server on localhost port 9000. The AI layer uses Ollama on localhost port 11434 with phi3:mini. The output layer renders and exports minutes, actions, and schedule impact records.
+
+\subsection{Component Summary}
+\begin{itemize}
+    \item Browser UI collects project details, audio, transcript, agenda, and schedule input.
+    \item Whisper server transcribes audio through \texttt{/asr} and reports status through \texttt{/health}.
+    \item Ollama with phi3:mini extracts structured JSON from transcript, agenda, and schedule context.
+    \item CSV parser normalizes schedule headers and validates project task rows.
+    \item Report renderer exports TXT minutes, CSV action tracker, and TXT schedule impact report.
+\end{itemize}
+
+The workflow is meeting recording, transcription, transcript review, prompt construction, model analysis, JSON parsing, data normalization, and report generation. This architecture is intentionally local first and avoids mandatory cloud storage or cloud API keys.
+
+\section{Methodology}
+The work followed a prototype based methodology. The required outputs were identified first: minutes, decisions, blockers, responsibilities, due dates, agenda coverage, and schedule impact flags. The input design was then built around evidence that a site engineer can realistically provide: audio recording, transcript text, agenda text, and schedule CSV.
+
+The model prompt requires a raw JSON object with fields for summary, attendees, decisions, blockers, actions, agenda coverage, schedule impacts, and next meeting. Browser side code then normalizes the model output. This additional validation is necessary because compact local models can occasionally return extra text or incomplete JSON.
+
+Schedule rows are parsed before analysis. Header aliases such as activity, assigned to, finish, due date, and progress are normalized to the expected columns. Blank task rows are skipped, missing optional values become TBD, and malformed CSV input produces an error instead of an incorrect schedule table.
+
+\section{Implementation}
+\subsection{Audio and Transcription}
+The system accepts mp3, wav, m4a, ogg, webm, and mp4 files up to 25 MB. The Flask Whisper server includes \texttt{/health}, \texttt{/warmup}, and \texttt{/asr} endpoints. The health route reports dependency availability, model name, model load state, device, compute type, language, and supported extensions. The warmup route can load the model before a demonstration.
+
+\subsection{Meeting Intelligence}
+The application sends transcript, agenda, and schedule context to phi3:mini through Ollama. The returned JSON is used to populate the minutes tab, action tracker tab, and schedule impact tab. Fallback enrichment functions detect explicit action, decision, blocker, delay, and priority phrases when the model output is incomplete.
+
+\subsection{Outputs}
+The Version 1 deliverables are directly exportable from the browser. Meeting minutes are exported as a text file, the action tracker is exported as CSV, and the schedule impact report is exported as text. The transcript remains editable so the user can correct speech recognition errors before analysis.
+
+\section{Evaluation and Results}
+The evaluation is functional rather than statistical because the current work is a Version 1 MVP. The test pack contains a demo transcript, expected output file, valid schedule CSV, malformed schedule CSV, manual scoring sheet, and a Whisper server smoke test. The goal is to verify that the workflow works end to end and handles common failure modes.
+
+\subsection{Functional Test Coverage}
+\begin{itemize}
+    \item Whisper health check reports dependency and model status.
+    \item Audio validation rejects unsupported or oversized files.
+    \item Demo transcript produces minutes, decisions, blockers, actions, and schedule impacts.
+    \item Malformed CSV input displays a clear error message.
+    \item Ollama offline condition displays recovery guidance.
+    \item Export buttons download TXT and CSV deliverables.
+\end{itemize}
+
+Current validation confirms that faster-whisper is installed, the base model is available locally, the Flask health route returns OK, and the ASR route can process a temporary WAV file. The prototype therefore satisfies the Version 1 workflow requirement. It does not yet provide word error rate, extraction precision, or extraction recall because those measurements require a larger annotated construction meeting dataset.
+
+\section{Limitations and Future Work}
+The system is a guided local MVP, not a production construction operating system. It does not include authentication, role based permissions, company accounts, backend database, speaker diarization, project memory, or automatic task dispatch. The schedule impact logic uses lightweight matching and prompt context rather than critical path analysis.
+
+Future work should add a FastAPI backend, PostgreSQL storage, authentication, and project history. A project memory layer can store transcripts, tasks, schedules, documents, risks, vendors, and decisions across meetings. Later versions can introduce specialized agents for meetings, schedules, and documents, with human approval for important decisions.
+
+\section{Conclusion}
+Site Meeting Copilot v2 demonstrates that a local AI workflow can support construction site meeting documentation. The prototype accepts meeting audio or text, transcribes speech locally, extracts decisions and blockers, generates an action tracker, checks agenda coverage, and flags possible schedule impacts. The project satisfies the Version 1 requirement for a construction meeting intelligence MVP and provides a foundation for future project memory, backend integration, and agent based construction project management.
+
+\begin{thebibliography}{00}
+
+\bibitem{radford2023whisper}
+A. Radford, J. W. Kim, T. Xu, G. Brockman, C. McLeavey, and I. Sutskever, ``Robust speech recognition via large-scale weak supervision,'' \textit{Proc. ICML}, 2023. [Online]. Available: \url{https://arxiv.org/abs/2212.04356}
+
+\bibitem{abdin2024phi3}
+M. Abdin \textit{et al.}, ``Phi-3 technical report: A highly capable language model locally on your phone,'' arXiv, 2024. [Online]. Available: \url{https://arxiv.org/abs/2404.14219}
+
+\bibitem{fasterwhisper}
+SYSTRAN, ``faster-whisper: Transcription with CTranslate2,'' GitHub repository. [Online]. Available: \url{https://github.com/SYSTRAN/faster-whisper}
+
+\bibitem{ludwig2018meetings}
+R. Ludwig, ``Meetings critical to construction project success and best practices: A case study,'' California Polytechnic State University, 2018. [Online]. Available: \url{https://digitalcommons.calpoly.edu/cmsp/183}
+
+\bibitem{ollamaapi}
+Ollama, ``Generate a response API documentation.'' [Online]. Available: \url{https://docs.ollama.com/api/generate}
+
+\bibitem{lokaditya2026project}
+K. Lokaditya, ``Site Meeting Copilot v2 project implementation and final report,'' Dayananda Sagar University, 2026.
+
+\end{thebibliography}
+
+\end{document}

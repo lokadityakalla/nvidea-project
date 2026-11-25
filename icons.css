@@ -1,0 +1,43 @@
+.ti {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.ti::before {
+  display: inline-block;
+}
+
+.ti-building-factory-2::before { content: "▦"; }
+.ti-edit::before { content: "✎"; }
+.ti-file-description::before { content: "▤"; }
+.ti-list-check::before { content: "☑"; }
+.ti-calendar-stats::before { content: "▣"; }
+.ti-info-circle::before { content: "i"; }
+.ti-microphone::before { content: "◉"; }
+.ti-chevron-down::before { content: "⌄"; }
+.ti-upload::before { content: "↑"; }
+.ti-file-music::before { content: "♪"; }
+.ti-x::before { content: "×"; }
+.ti-ear::before { content: "◖"; }
+.ti-clipboard-list::before { content: "☷"; }
+.ti-circle-check::before { content: "✓"; }
+.ti-table::before { content: "▦"; }
+.ti-table-import::before { content: "⇧"; }
+.ti-download::before { content: "↓"; }
+.ti-align-left::before { content: "≡"; }
+.ti-sparkles::before { content: "✦"; }
+.ti-file-text::before { content: "□"; }
+.ti-trash::before { content: "⌫"; }
+.ti-alert-circle::before { content: "!"; }
+.ti-copy::before { content: "⧉"; }
+.ti-arrow-left::before { content: "←"; }
+.ti-calendar-exclamation::before { content: "▣"; }
+.ti-file-spreadsheet::before { content: "▥"; }
+.ti-calendar::before { content: "□"; }
+.ti-map-pin::before { content: "⌖"; }
+.ti-clock::before { content: "◷"; }
+.ti-circle-dashed::before { content: "○"; }
